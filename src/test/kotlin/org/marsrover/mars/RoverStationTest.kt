@@ -28,4 +28,21 @@ class RoverStationTest {
     fun `answers a ping with the current state`() {
         assertEquals("RPT 1 0 0 N OK", station.receive("CMD 1"))
     }
+
+    @Test
+    fun `stops at an obstacle and reports it`() {
+        assertEquals("RPT 1 1 2 E BLOCKED 2 2", station.receive("CMD 1 FFRFFF"))
+    }
+
+    @Test
+    fun `rejects the whole message when a command is unknown, without moving`() {
+        assertEquals("RPT 1 0 0 N REJECTED UNKNOWN_COMMAND", station.receive("CMD 1 FFXL"))
+    }
+
+    @Test
+    fun `rejects a malformed line with seq 0 and the current state`() {
+        station.receive("CMD 1 F")
+
+        assertEquals("RPT 0 0 1 N REJECTED MALFORMED", station.receive("GARBAGE"))
+    }
 }
