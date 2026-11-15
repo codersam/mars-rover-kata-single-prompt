@@ -5,12 +5,15 @@ import org.marsrover.protocol.Position
 import org.marsrover.protocol.Rover
 import org.marsrover.protocol.Status
 
+/** Where the rover ended up, and whether it got there unhindered ([Status.Ok]) or [Status.Blocked]. */
 data class Execution(val rover: Rover, val status: Status)
 
+/** A wrap-around grid: leaving one edge re-enters at the opposite one. */
 class Planet(private val width: Int, private val height: Int, private val obstacles: Set<Position> = emptySet()) {
 
     fun isBlocked(position: Position): Boolean = position in obstacles
 
+    /** Runs [commands] in order; the first obstacle stops the rover on its last free cell and skips the rest. */
     fun execute(rover: Rover, commands: List<Command>): Execution =
         commands.fold(Execution(rover, Status.Ok)) { execution, command ->
             if (execution.status == Status.Ok) execution.rover.step(command) else execution
