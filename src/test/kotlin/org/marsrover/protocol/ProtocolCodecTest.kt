@@ -7,6 +7,7 @@ import org.marsrover.protocol.Direction.E
 import org.marsrover.protocol.Direction.N
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class ProtocolCodecTest {
 
@@ -66,5 +67,29 @@ class ProtocolCodecTest {
         assertEquals("RPT 0 2 3 N REJECTED MALFORMED", ProtocolCodec.encode(Report(0, rover, Status.Rejected(Reason.MALFORMED))))
         assertEquals("RPT 9 2 3 N REJECTED UNKNOWN_COMMAND", ProtocolCodec.encode(Report(9, rover, Status.Rejected(Reason.UNKNOWN_COMMAND))))
         assertEquals("RPT 9 2 3 N REJECTED DUPLICATE", ProtocolCodec.encode(Report(9, rover, Status.Rejected(Reason.DUPLICATE))))
+    }
+
+    @Test
+    fun `decodes every kind of report`() {
+        listOf(
+            "RPT 0 0 0 N OK" to Report(0, Rover(Position(0, 0), N), Status.Ok),
+            "RPT 8 1 2 E BLOCKED 2 2" to Report(8, Rover(Position(1, 2), E), Status.Blocked(Position(2, 2))),
+            "RPT 0 2 3 N REJECTED MALFORMED" to Report(0, rover, Status.Rejected(Reason.MALFORMED)),
+            "RPT 9 2 3 N REJECTED UNKNOWN_COMMAND" to Report(9, rover, Status.Rejected(Reason.UNKNOWN_COMMAND)),
+            "RPT 9 2 3 N REJECTED DUPLICATE" to Report(9, rover, Status.Rejected(Reason.DUPLICATE)),
+        ).forEach { (line, report) ->
+            assertEquals(report, ProtocolCodec.decodeReport(line), "line: '$line'")
+        }
+    }
+
+    @Test
+    fun `a line that does not follow the report grammar is not a report`() {
+        listOf(
+            "", "GARBAGE", "RPT 1 0 0 N", "RPT 1 0 0 X OK", "RPT 1 0 0 n OK", "RPT -1 0 0 N OK",
+            "RPT 1 0 0 N BLOCKED 2", "RPT 1 0 0 N REJECTED", "RPT 1 0 0 N REJECTED TIRED",
+            "RPT 1 0 0 N OK ", "RPT  1 0 0 N OK", "rpt 1 0 0 N OK", "RPT 1 0 99999999999 N OK", "CMD 1 F",
+        ).forEach { line ->
+            assertNull(ProtocolCodec.decodeReport(line), "line: '$line'")
+        }
     }
 }

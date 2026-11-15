@@ -3,6 +3,7 @@ package org.marsrover.protocol
 object ProtocolCodec {
 
     private val commandLine = Regex("""CMD (\d+)(?: (\S+))?""")
+    private val reportLine = Regex("""RPT (\d+) (\d+) (\d+) ([NESW]) (OK|BLOCKED (\d+) (\d+)|REJECTED ([A-Z_]+))""")
 
     fun encode(message: CommandMessage): String =
         listOfNotNull("CMD", message.seq, message.commands.joinToString("").ifEmpty { null })
@@ -26,4 +27,19 @@ object ProtocolCodec {
         }
         return CommandMessage(seq, commands)
     }
+
+    fun decodeReport(line: String): Report? {
+        val match = reportLine.matchEntire(line) ?: return null
+        val (seq, x, y, direction, status, obstacleX, obstacleY, reason) = match.destructured
+        val rover = Rover(position(x, y) ?: return null, Direction.valueOf(direction))
+        val decodedStatus = when (status.substringBefore(" ")) {
+            "OK" -> Status.Ok
+            "BLOCKED" -> Status.Blocked(position(obstacleX, obstacleY) ?: return null)
+            else -> Status.Rejected(Reason.entries.find { it.name == reason } ?: return null)
+        }
+        return Report(seq.toIntOrNull() ?: return null, rover, decodedStatus)
+    }
+
+    private fun position(x: String, y: String): Position? =
+        Position(x.toIntOrNull() ?: return null, y.toIntOrNull() ?: return null)
 }
