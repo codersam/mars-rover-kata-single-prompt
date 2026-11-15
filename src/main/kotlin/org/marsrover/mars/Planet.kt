@@ -15,6 +15,9 @@ class Planet(val width: Int, val height: Int) {
         }
 
     private fun Rover.moved(steps: Int) = copy(
-        position = Position(position.x + direction.dx * steps, position.y + direction.dy * steps)
+        position = Position(
+            (position.x + direction.dx * steps).mod(width),
+            (position.y + direction.dy * steps).mod(height),
+        )
     )
 }

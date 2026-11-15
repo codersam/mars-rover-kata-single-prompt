@@ -31,4 +31,18 @@ class PlanetTest {
                 assertEquals(Rover(expected, heading), planet.execute(Rover(centre, heading), listOf(B)))
             }
     }
+
+    @Test
+    fun `leaving an edge wraps around to the opposite edge`() {
+        assertEquals(Rover(Position(2, 0), N), planet.execute(Rover(Position(2, 4), N), listOf(F)))
+        assertEquals(Rover(Position(0, 2), E), planet.execute(Rover(Position(4, 2), E), listOf(F)))
+        assertEquals(Rover(Position(2, 4), S), planet.execute(Rover(Position(2, 0), S), listOf(F)))
+        assertEquals(Rover(Position(4, 2), W), planet.execute(Rover(Position(0, 2), W), listOf(F)))
+    }
+
+    @Test
+    fun `backing over an edge wraps around too`() {
+        assertEquals(Rover(Position(2, 4), N), planet.execute(Rover(Position(2, 0), N), listOf(B)))
+        assertEquals(Rover(Position(4, 2), E), planet.execute(Rover(Position(0, 2), E), listOf(B)))
+    }
 }
