@@ -11,6 +11,8 @@ class Planet(val width: Int, val height: Int) {
             when (command) {
                 Command.F -> current.moved(1)
                 Command.B -> current.moved(-1)
+                Command.L -> current.copy(direction = current.direction.left())
+                Command.R -> current.copy(direction = current.direction.right())
             }
         }
 
