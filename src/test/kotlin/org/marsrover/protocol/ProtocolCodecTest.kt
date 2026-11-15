@@ -17,4 +17,14 @@ class ProtocolCodecTest {
     fun `encodes an empty command message as a status ping`() {
         assertEquals("CMD 4", ProtocolCodec.encode(CommandMessage(4, emptyList())))
     }
+
+    @Test
+    fun `decodes a command message`() {
+        assertEquals(CommandMessage(7, listOf(F, F, R, F, F, L)), ProtocolCodec.decodeCommand("CMD 7 FFRFFL"))
+    }
+
+    @Test
+    fun `decodes a status ping`() {
+        assertEquals(CommandMessage(4, emptyList()), ProtocolCodec.decodeCommand("CMD 4"))
+    }
 }
