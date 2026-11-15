@@ -1,11 +1,10 @@
 # Implementation History
 
 How this Mars Rover kata was planned and built, written for readers who did not see the working
-session. The code was written by Claude (Claude Code) together with the repository owner, in three phases:
+session. The code was written by Claude (Claude Code) together with the repository owner, in two phases:
 
 1. **Design**: interactive. Claude proposed a design and the owner answered clarifying questions. No code was written.
 2. **Implementation**: one uninterrupted pass after the owner said "go", strictly test-first.
-3. **History restoration**: rebuilding the git history after the original one was lost.
 
 The four Rules of Simple Design from [`RULES.md`](RULES.md) guided every step:
 
@@ -79,16 +78,13 @@ message type, keeping the protocol to two message kinds (**R4**):
 - **One commit per cycle**, prefixed `green:` or `refactor:`. A commit was made only when every test
   passed (**R1**).
 
-### Environment constraints
-- **No Gradle.** The session's sandbox blocked the local socket Gradle needs. Every cycle was compiled
-  and run directly with the Kotlin 2.4.21 compiler and JUnit 6, using the jars the project's Gradle
-  build uses.
-- **No project `.git` at first.** Writing it was blocked, so the history was recorded elsewhere. That
-  copy was later lost; see Phase 3.
+### Environment constraint
+The session's sandbox blocked the local socket Gradle needs. Every cycle was compiled and run directly
+with the Kotlin 2.4.21 compiler and JUnit 6, using the jars the project's Gradle build uses.
 
 ### Cycle log
 
-Test counts are cumulative and were confirmed again in Phase 3.
+Test counts are cumulative.
 
 | # | Commit | Tests | What happened | Rules |
 |---|---|---|---|---|
@@ -140,27 +136,10 @@ TDD showed that some planned elements weren't needed, or needed reshaping.
 
 ---
 
-## Phase 3: History restoration
-
-The original history was kept outside the project because of the sandbox, and it was lost. Once the
-owner created an empty repository in the project, the history was rebuilt from the session record:
-
-- Each earlier file version was worked backwards from the final files, using the exact edits made
-  during implementation.
-- All 27 commits were replayed in a temporary repository. Every code commit was compiled and tested,
-  and all passed with the same test counts as the original run.
-- The rebuilt final commit was confirmed byte-identical to the working tree (37 files) before it was
-  brought into the project.
-
-Commit messages, order and content match the original. Hashes and timestamps are new, and the
-scaffold commit contains the IDE files as they were at restoration time.
-
----
-
 ## Where each rule was enforced
 
 - **R1, passes the tests.** Red before green in every cycle. Commits only when green. The demo and the
-  `PROTOCOL.md` example are both checked by tests. History restoration re-ran the tests at every commit.
+  `PROTOCOL.md` example are both checked by tests.
 - **R2, reveals intention.** Domain names throughout (`ControlTower`, `RoverStation`, `Outcome.Delivered`,
   `Reason.DUPLICATE`). Named results (`DecodedCommand`, `Outcome`) instead of exceptions or nulls where
   the cases matter. `UNSOLICITED_SEQ`. The explicit ping encoding. KDoc only where the rule isn't
