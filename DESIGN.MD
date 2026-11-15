@@ -3,7 +3,7 @@
 A Mars Rover on Mars is commanded by a Control Tower on Earth. The two sides talk over an
 explicitly defined, line-based text protocol. Implemented in Kotlin, test-first (TDD).
 
-## Guiding rules — 4 Rules of Simple Design (`prompt.md`)
+## Guiding rules — 4 Rules of Simple Design (`RULES.md`)
 
 1. **Passes the tests** — every behaviour is driven by a failing test first, including the console demo.
 2. **Reveals intention** — domain names: `ControlTower`, `RoverStation`, `Outcome.Delivered`, `Reason.DUPLICATE`.
