@@ -6,6 +6,7 @@ import org.marsrover.protocol.Position
 import org.marsrover.protocol.ProtocolCodec
 import org.marsrover.protocol.Rover
 import org.marsrover.protocol.Status
+import org.marsrover.protocol.UNSOLICITED_SEQ
 
 /** Mission control on Earth: commands the rover over [link] and remembers what it learned. */
 class ControlTower(private val link: (String) -> String) {
@@ -23,7 +24,7 @@ class ControlTower(private val link: (String) -> String) {
         return accept(link(ProtocolCodec.encode(CommandMessage(seq, commands))), expectedSeq = seq)
     }
 
-    fun receive(line: String): Outcome = accept(line, expectedSeq = 0)
+    fun receive(line: String): Outcome = accept(line, expectedSeq = UNSOLICITED_SEQ)
 
     private fun accept(line: String, expectedSeq: Int): Outcome {
         val report = ProtocolCodec.decodeReport(line) ?: return Outcome.MalformedReply(line)

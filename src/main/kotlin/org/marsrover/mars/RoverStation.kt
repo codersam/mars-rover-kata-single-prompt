@@ -8,21 +8,22 @@ import org.marsrover.protocol.Reason
 import org.marsrover.protocol.Report
 import org.marsrover.protocol.Rover
 import org.marsrover.protocol.Status
+import org.marsrover.protocol.UNSOLICITED_SEQ
 import org.marsrover.protocol.UnknownCommand
 
 /** The rover's end of the link on Mars: turns command lines into report lines. */
 class RoverStation(private val planet: Planet, private var rover: Rover) {
 
-    private var lastSeq = 0
+    private var lastSeq = UNSOLICITED_SEQ
 
     init {
         require(!planet.isBlocked(rover.position)) { "Rover cannot land on an obstacle at ${rover.position}" }
     }
 
-    fun landingReport(): String = report(0, Status.Ok)
+    fun landingReport(): String = report(UNSOLICITED_SEQ, Status.Ok)
 
     fun receive(line: String): String = when (val decoded = ProtocolCodec.decodeCommand(line)) {
-        MalformedLine -> report(0, Status.Rejected(Reason.MALFORMED))
+        MalformedLine -> report(UNSOLICITED_SEQ, Status.Rejected(Reason.MALFORMED))
         is UnknownCommand -> accept(decoded.seq) { Status.Rejected(Reason.UNKNOWN_COMMAND) }
         is CommandMessage -> accept(decoded.seq) { execute(decoded.commands) }
     }
