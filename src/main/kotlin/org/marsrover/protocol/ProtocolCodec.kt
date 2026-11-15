@@ -5,9 +5,8 @@ object ProtocolCodec {
     private val commandLine = Regex("""CMD (\d+)(?: (\S+))?""")
 
     fun encode(message: CommandMessage): String =
-        listOf("CMD", message.seq, message.commands.joinToString(""))
+        listOfNotNull("CMD", message.seq, message.commands.joinToString("").ifEmpty { null })
             .joinToString(" ")
-            .trimEnd()
 
     fun decodeCommand(line: String): DecodedCommand {
         val match = commandLine.matchEntire(line) ?: return MalformedLine
