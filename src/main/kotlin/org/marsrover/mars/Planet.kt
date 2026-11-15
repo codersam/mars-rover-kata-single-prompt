@@ -3,18 +3,27 @@ package org.marsrover.mars
 import org.marsrover.protocol.Command
 import org.marsrover.protocol.Position
 import org.marsrover.protocol.Rover
+import org.marsrover.protocol.Status
 
-class Planet(val width: Int, val height: Int) {
+data class Execution(val rover: Rover, val status: Status)
 
-    fun execute(rover: Rover, commands: List<Command>): Rover =
-        commands.fold(rover) { current, command ->
-            when (command) {
-                Command.F -> current.moved(1)
-                Command.B -> current.moved(-1)
-                Command.L -> current.copy(direction = current.direction.left())
-                Command.R -> current.copy(direction = current.direction.right())
-            }
+class Planet(val width: Int, val height: Int, private val obstacles: Set<Position> = emptySet()) {
+
+    fun execute(rover: Rover, commands: List<Command>): Execution =
+        commands.fold(Execution(rover, Status.Ok)) { execution, command ->
+            if (execution.status == Status.Ok) execution.rover.step(command) else execution
         }
+
+    private fun Rover.step(command: Command): Execution {
+        val next = when (command) {
+            Command.F -> moved(1)
+            Command.B -> moved(-1)
+            Command.L -> copy(direction = direction.left())
+            Command.R -> copy(direction = direction.right())
+        }
+        return if (next.position in obstacles) Execution(this, Status.Blocked(next.position))
+        else Execution(next, Status.Ok)
+    }
 
     private fun Rover.moved(steps: Int) = copy(
         position = Position(
