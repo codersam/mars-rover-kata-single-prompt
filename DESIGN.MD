@@ -67,12 +67,14 @@ Every report carries the rover's current position and heading.
 ### `org.marsrover.protocol` — shared vocabulary (Earth never depends on Mars)
 - `Direction` (N, E, S, W) with `left()` / `right()`
 - `Position(x, y)`, `Command` (F, B, L, R), `Rover(position, direction)` — immutable
-- `sealed Message`: `CommandMessage(seq, commands)`, `Report(seq, rover, status)`
+- `CommandMessage(seq, commands)`, `Report(seq, rover, status)`, `UNSOLICITED_SEQ = 0`
+- `sealed DecodedCommand`: `CommandMessage` | `UnknownCommand(seq)` | `MalformedLine`
 - `sealed Status`: `Ok`, `Blocked(obstacle)`, `Rejected(reason)`; `Reason` enum
-- `ProtocolCodec`: `encode(Message)`, `decodeCommand(line)`, `decodeReport(line)`
+- `ProtocolCodec`: `encode(CommandMessage)`, `encode(Report)`, `decodeCommand(line): DecodedCommand`,
+  `decodeReport(line): Report?`
 
 ### `org.marsrover.mars`
-- `Planet(width, height, obstacles)` — wrapping, blocking, executing commands
+- `Planet(width, height, obstacles)` — wrapping, blocking, `execute(rover, commands): Execution(rover, status)`
 - `RoverStation(planet, rover)` — `landingReport(): String`, `receive(line: String): String`;
   fails fast if the rover lands on an obstacle
 
@@ -115,3 +117,13 @@ Every report carries the rover's current position and heading.
 - Housekeeping: `group = 'org.marsrover'` in `build.gradle`; replace the old `org.gameoflifekt` `Main.kt`;
   add `.claude/` to `.gitignore`.
 - Finish with a summary of the cycles, the last test run, and the commit log.
+
+## As built — deviations found during TDD
+
+- **No `sealed Message`.** Two `encode` overloads were all the code needed; a common supertype had no
+  user (rule 4: least elements).
+- **`DecodedCommand`** was added: the station must tell a malformed line (no seq) from an unknown command
+  (seq known, so it can be consumed and checked for duplicates). `CommandMessage` is one of its cases.
+- **`decodeReport` returns `Report?`.** Earth only needs to know "report or not" (`MalformedReply`).
+- **`UNSOLICITED_SEQ`** names the reserved seq `0`, shared by station and tower (rules 2 and 3).
+- **`PROTOCOL.md`'s example exchange** is replayed line by line by `EarthMarsTest`.
