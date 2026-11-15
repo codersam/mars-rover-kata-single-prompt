@@ -57,4 +57,19 @@ class EarthMarsTest {
             impostor.send(listOf(F)),
         )
     }
+
+    @Test
+    fun `the example exchange in PROTOCOL md holds line by line`() {
+        assertEquals("RPT 0 0 0 N OK", station.landingReport())
+        listOf(
+            "CMD 1 FFRFF" to "RPT 1 1 2 E BLOCKED 2 2",
+            "CMD 2 RFFF" to "RPT 2 1 4 S OK",
+            "CMD 3" to "RPT 3 1 4 S OK",
+            "CMD 3 F" to "RPT 3 1 4 S REJECTED DUPLICATE",
+            "CMD 4 FXF" to "RPT 4 1 4 S REJECTED UNKNOWN_COMMAND",
+            "HELLO" to "RPT 0 1 4 S REJECTED MALFORMED",
+        ).forEach { (command, report) ->
+            assertEquals(report, station.receive(command), "reply to '$command'")
+        }
+    }
 }
