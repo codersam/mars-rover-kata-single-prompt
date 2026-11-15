@@ -8,6 +8,16 @@ object ProtocolCodec {
         listOfNotNull("CMD", message.seq, message.commands.joinToString("").ifEmpty { null })
             .joinToString(" ")
 
+    fun encode(report: Report): String = with(report) {
+        "RPT $seq ${rover.position.x} ${rover.position.y} ${rover.direction} ${encode(status)}"
+    }
+
+    private fun encode(status: Status): String = when (status) {
+        Status.Ok -> "OK"
+        is Status.Blocked -> "BLOCKED ${status.obstacle.x} ${status.obstacle.y}"
+        is Status.Rejected -> "REJECTED ${status.reason}"
+    }
+
     fun decodeCommand(line: String): DecodedCommand {
         val match = commandLine.matchEntire(line) ?: return MalformedLine
         val seq = match.groupValues[1].toIntOrNull() ?: return MalformedLine

@@ -3,10 +3,14 @@ package org.marsrover.protocol
 import org.marsrover.protocol.Command.F
 import org.marsrover.protocol.Command.L
 import org.marsrover.protocol.Command.R
+import org.marsrover.protocol.Direction.E
+import org.marsrover.protocol.Direction.N
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class ProtocolCodecTest {
+
+    private val rover = Rover(Position(2, 3), N)
 
     @Test
     fun `encodes a command message`() {
@@ -42,5 +46,25 @@ class ProtocolCodecTest {
         ).forEach { line ->
             assertEquals(MalformedLine, ProtocolCodec.decodeCommand(line), "line: '$line'")
         }
+    }
+
+    @Test
+    fun `encodes an ok report`() {
+        assertEquals("RPT 7 2 3 N OK", ProtocolCodec.encode(Report(7, rover, Status.Ok)))
+    }
+
+    @Test
+    fun `encodes a blocked report with the obstacle position`() {
+        assertEquals(
+            "RPT 8 1 2 E BLOCKED 2 2",
+            ProtocolCodec.encode(Report(8, Rover(Position(1, 2), E), Status.Blocked(Position(2, 2)))),
+        )
+    }
+
+    @Test
+    fun `encodes a rejected report with its reason`() {
+        assertEquals("RPT 0 2 3 N REJECTED MALFORMED", ProtocolCodec.encode(Report(0, rover, Status.Rejected(Reason.MALFORMED))))
+        assertEquals("RPT 9 2 3 N REJECTED UNKNOWN_COMMAND", ProtocolCodec.encode(Report(9, rover, Status.Rejected(Reason.UNKNOWN_COMMAND))))
+        assertEquals("RPT 9 2 3 N REJECTED DUPLICATE", ProtocolCodec.encode(Report(9, rover, Status.Rejected(Reason.DUPLICATE))))
     }
 }
