@@ -9,6 +9,8 @@ data class Execution(val rover: Rover, val status: Status)
 
 class Planet(private val width: Int, private val height: Int, private val obstacles: Set<Position> = emptySet()) {
 
+    fun isBlocked(position: Position): Boolean = position in obstacles
+
     fun execute(rover: Rover, commands: List<Command>): Execution =
         commands.fold(Execution(rover, Status.Ok)) { execution, command ->
             if (execution.status == Status.Ok) execution.rover.step(command) else execution
@@ -21,7 +23,7 @@ class Planet(private val width: Int, private val height: Int, private val obstac
             Command.L -> copy(direction = direction.left())
             Command.R -> copy(direction = direction.right())
         }
-        return if (next.position in obstacles) Execution(this, Status.Blocked(next.position))
+        return if (isBlocked(next.position)) Execution(this, Status.Blocked(next.position))
         else Execution(next, Status.Ok)
     }
 

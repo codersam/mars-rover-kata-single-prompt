@@ -5,6 +5,7 @@ import org.marsrover.protocol.Position
 import org.marsrover.protocol.Rover
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class RoverStationTest {
 
@@ -85,5 +86,12 @@ class RoverStationTest {
         station.receive("CMD 1 GARBAGE TOO")
 
         assertEquals("RPT 1 0 1 N OK", station.receive("CMD 1 F"))
+    }
+
+    @Test
+    fun `a rover cannot land on an obstacle`() {
+        assertFailsWith<IllegalArgumentException> {
+            RoverStation(Planet(width = 5, height = 5, obstacles = setOf(Position(0, 0))), Rover(Position(0, 0), N))
+        }
     }
 }

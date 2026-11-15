@@ -15,6 +15,10 @@ class RoverStation(private val planet: Planet, private var rover: Rover) {
 
     private var lastSeq = 0
 
+    init {
+        require(!planet.isBlocked(rover.position)) { "Rover cannot land on an obstacle at ${rover.position}" }
+    }
+
     fun landingReport(): String = report(0, Status.Ok)
 
     fun receive(line: String): String = when (val decoded = ProtocolCodec.decodeCommand(line)) {
