@@ -18,11 +18,16 @@ class ControlTower(private val link: (String) -> String) {
 
     private var nextSeq = 1
 
-    fun send(commands: List<Command>): Outcome =
-        receive(link(ProtocolCodec.encode(CommandMessage(nextSeq++, commands))))
+    fun send(commands: List<Command>): Outcome {
+        val seq = nextSeq++
+        return accept(link(ProtocolCodec.encode(CommandMessage(seq, commands))), expectedSeq = seq)
+    }
 
-    fun receive(line: String): Outcome {
-        val report = ProtocolCodec.decodeReport(line)!!
+    fun receive(line: String): Outcome = accept(line, expectedSeq = 0)
+
+    private fun accept(line: String, expectedSeq: Int): Outcome {
+        val report = ProtocolCodec.decodeReport(line) ?: return Outcome.MalformedReply(line)
+        if (report.seq != expectedSeq) return Outcome.SeqMismatch(expectedSeq, report.seq)
         lastKnown = report.rover
         (report.status as? Status.Blocked)?.let { discoveredObstacles += it.obstacle }
         return Outcome.Delivered(report)

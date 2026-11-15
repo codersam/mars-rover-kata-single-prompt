@@ -78,4 +78,37 @@ class ControlTowerTest {
         assertEquals(Outcome.Delivered(Report(1, Rover(Position(3, 3), E), Status.Rejected(Reason.DUPLICATE))), outcome)
         assertEquals(Rover(Position(3, 3), E), tower.lastKnown)
     }
+
+    @Test
+    fun `an unreadable reply is reported as malformed and changes nothing`() {
+        val tower = towerReplying("GARBAGE")
+        tower.receive("RPT 0 0 0 N OK")
+
+        assertEquals(Outcome.MalformedReply("GARBAGE"), tower.send(listOf(F)))
+        assertEquals(Rover(Position(0, 0), N), tower.lastKnown)
+    }
+
+    @Test
+    fun `a reply to another command is a seq mismatch and changes nothing`() {
+        val tower = towerReplying("RPT 7 2 2 E BLOCKED 3 2")
+
+        assertEquals(Outcome.SeqMismatch(expected = 1, actual = 7), tower.send(listOf(F)))
+        assertNull(tower.lastKnown)
+        assertEquals(emptySet(), tower.obstacles)
+    }
+
+    @Test
+    fun `an unsolicited report must carry seq 0`() {
+        assertEquals(Outcome.SeqMismatch(expected = 0, actual = 3), towerReplying().receive("RPT 3 0 0 N OK"))
+    }
+
+    @Test
+    fun `a failed exchange still consumes its seq`() {
+        val tower = towerReplying("GARBAGE", "RPT 2 0 1 N OK")
+
+        tower.send(listOf(F))
+        tower.send(listOf(F))
+
+        assertEquals(listOf("CMD 1 F", "CMD 2 F"), sent)
+    }
 }
