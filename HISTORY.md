@@ -153,7 +153,7 @@ TDD showed that some planned elements weren't needed, or needed reshaping.
 git log --reverse --oneline        # the cycles above, in order
 git show 3389058                   # any single cycle: test and code change together
 ./gradlew test                     # 52 tests
-# run main() in src/main/kotlin/org/marsrover/Main.kt from the IDE to print the demo wire traffic
+./gradlew run                      # demo mission: prints the wire traffic
 ```
 
 See [`DESIGN.MD`](DESIGN.MD) for the full design, [`PROTOCOL.md`](PROTOCOL.md) for the wire protocol, and

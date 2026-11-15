@@ -1,5 +1,6 @@
 plugins {
     id 'org.jetbrains.kotlin.jvm' version '2.4.21'
+    id 'application'
 }
 
 group = 'org.marsrover'
@@ -15,6 +16,10 @@ dependencies {
 
 kotlin {
     jvmToolchain(25)
+}
+
+application {
+    mainClass = 'org.marsrover.MainKt'
 }
 
 test {
