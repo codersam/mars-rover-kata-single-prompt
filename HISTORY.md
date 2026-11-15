@@ -78,10 +78,6 @@ message type, keeping the protocol to two message kinds (**R4**):
 - **One commit per cycle**, prefixed `green:` or `refactor:`. A commit was made only when every test
   passed (**R1**).
 
-### Environment constraint
-The session's sandbox blocked the local socket Gradle needs. Every cycle was compiled and run directly
-with the Kotlin 2.4.21 compiler and JUnit 6, using the jars the project's Gradle build uses.
-
 ### Cycle log
 
 Test counts are cumulative.
