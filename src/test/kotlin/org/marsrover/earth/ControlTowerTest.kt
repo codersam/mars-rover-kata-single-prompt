@@ -3,7 +3,9 @@ package org.marsrover.earth
 import org.marsrover.protocol.Command.F
 import org.marsrover.protocol.Command.R
 import org.marsrover.protocol.Direction.E
+import org.marsrover.protocol.Direction.N
 import org.marsrover.protocol.Position
+import org.marsrover.protocol.Reason
 import org.marsrover.protocol.Report
 import org.marsrover.protocol.Rover
 import org.marsrover.protocol.Status
@@ -43,5 +45,37 @@ class ControlTowerTest {
 
         assertEquals(Outcome.Delivered(Report(1, Rover(Position(1, 0), E), Status.Ok)), outcome)
         assertEquals(Rover(Position(1, 0), E), tower.lastKnown)
+    }
+
+    @Test
+    fun `learns the landing state from an unsolicited report`() {
+        val tower = towerReplying()
+
+        val outcome = tower.receive("RPT 0 0 0 N OK")
+
+        assertEquals(Outcome.Delivered(Report(0, Rover(Position(0, 0), N), Status.Ok)), outcome)
+        assertEquals(Rover(Position(0, 0), N), tower.lastKnown)
+        assertEquals(emptyList(), sent)
+    }
+
+    @Test
+    fun `remembers every obstacle the rover ran into`() {
+        val tower = towerReplying("RPT 1 1 2 E BLOCKED 2 2", "RPT 2 1 1 S BLOCKED 1 0", "RPT 3 1 1 S OK")
+
+        tower.send(listOf(F))
+        tower.send(listOf(F))
+        tower.send(emptyList())
+
+        assertEquals(setOf(Position(2, 2), Position(1, 0)), tower.obstacles)
+    }
+
+    @Test
+    fun `a rejected report still tells the current state`() {
+        val tower = towerReplying("RPT 1 3 3 E REJECTED DUPLICATE")
+
+        val outcome = tower.send(listOf(F))
+
+        assertEquals(Outcome.Delivered(Report(1, Rover(Position(3, 3), E), Status.Rejected(Reason.DUPLICATE))), outcome)
+        assertEquals(Rover(Position(3, 3), E), tower.lastKnown)
     }
 }
