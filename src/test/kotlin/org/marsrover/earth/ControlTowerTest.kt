@@ -1,0 +1,47 @@
+package org.marsrover.earth
+
+import org.marsrover.protocol.Command.F
+import org.marsrover.protocol.Command.R
+import org.marsrover.protocol.Direction.E
+import org.marsrover.protocol.Position
+import org.marsrover.protocol.Report
+import org.marsrover.protocol.Rover
+import org.marsrover.protocol.Status
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+
+class ControlTowerTest {
+
+    private val sent = mutableListOf<String>()
+
+    private fun towerReplying(vararg replies: String): ControlTower {
+        val pending = ArrayDeque(replies.toList())
+        return ControlTower { line -> sent += line; pending.removeFirst() }
+    }
+
+    @Test
+    fun `knows nothing about the rover before any report`() {
+        assertNull(towerReplying().lastKnown)
+    }
+
+    @Test
+    fun `numbers outgoing commands from 1`() {
+        val tower = towerReplying("RPT 1 0 1 N OK", "RPT 2 0 1 N OK")
+
+        tower.send(listOf(F))
+        tower.send(emptyList())
+
+        assertEquals(listOf("CMD 1 F", "CMD 2"), sent)
+    }
+
+    @Test
+    fun `a delivered report becomes the last known state`() {
+        val tower = towerReplying("RPT 1 1 0 E OK")
+
+        val outcome = tower.send(listOf(R, F))
+
+        assertEquals(Outcome.Delivered(Report(1, Rover(Position(1, 0), E), Status.Ok)), outcome)
+        assertEquals(Rover(Position(1, 0), E), tower.lastKnown)
+    }
+}
