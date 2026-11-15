@@ -27,4 +27,20 @@ class ProtocolCodecTest {
     fun `decodes a status ping`() {
         assertEquals(CommandMessage(4, emptyList()), ProtocolCodec.decodeCommand("CMD 4"))
     }
+
+    @Test
+    fun `a well-formed line with letters other than F B L R is an unknown command`() {
+        assertEquals(UnknownCommand(5), ProtocolCodec.decodeCommand("CMD 5 FFXL"))
+        assertEquals(UnknownCommand(6), ProtocolCodec.decodeCommand("CMD 6 ffr"))
+    }
+
+    @Test
+    fun `a line that does not follow the command grammar is malformed`() {
+        listOf(
+            "", "GARBAGE", "CMD", "CMD ", "CMD -1", "CMD x F", "cmd 1 F", "CMD 1 F F",
+            " CMD 1 F", "CMD 1 F ", "CMD  1 F", "CMD 99999999999 F", "RPT 1 0 0 N OK",
+        ).forEach { line ->
+            assertEquals(MalformedLine, ProtocolCodec.decodeCommand(line), "line: '$line'")
+        }
+    }
 }
