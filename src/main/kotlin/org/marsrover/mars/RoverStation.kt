@@ -13,12 +13,21 @@ import org.marsrover.protocol.UnknownCommand
 /** The rover's end of the link on Mars: turns command lines into report lines. */
 class RoverStation(private val planet: Planet, private var rover: Rover) {
 
+    private var lastSeq = 0
+
     fun landingReport(): String = report(0, Status.Ok)
 
     fun receive(line: String): String = when (val decoded = ProtocolCodec.decodeCommand(line)) {
         MalformedLine -> report(0, Status.Rejected(Reason.MALFORMED))
-        is UnknownCommand -> report(decoded.seq, Status.Rejected(Reason.UNKNOWN_COMMAND))
-        is CommandMessage -> report(decoded.seq, execute(decoded.commands))
+        is UnknownCommand -> accept(decoded.seq) { Status.Rejected(Reason.UNKNOWN_COMMAND) }
+        is CommandMessage -> accept(decoded.seq) { execute(decoded.commands) }
+    }
+
+    /** Every seq is used once: replays are rejected, anything else consumes the seq before [handle] runs. */
+    private fun accept(seq: Int, handle: () -> Status): String {
+        if (seq <= lastSeq) return report(seq, Status.Rejected(Reason.DUPLICATE))
+        lastSeq = seq
+        return report(seq, handle())
     }
 
     private fun execute(commands: List<Command>): Status {

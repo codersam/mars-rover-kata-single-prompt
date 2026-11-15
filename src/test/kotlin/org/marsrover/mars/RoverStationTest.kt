@@ -45,4 +45,45 @@ class RoverStationTest {
 
         assertEquals("RPT 0 0 1 N REJECTED MALFORMED", station.receive("GARBAGE"))
     }
+
+    @Test
+    fun `rejects a replayed seq as duplicate, without moving`() {
+        station.receive("CMD 5 F")
+
+        assertEquals("RPT 5 0 1 N REJECTED DUPLICATE", station.receive("CMD 5 F"))
+        assertEquals("RPT 4 0 1 N REJECTED DUPLICATE", station.receive("CMD 4 F"))
+    }
+
+    @Test
+    fun `seq 0 is reserved for Mars and therefore always a duplicate`() {
+        assertEquals("RPT 0 0 0 N REJECTED DUPLICATE", station.receive("CMD 0 F"))
+    }
+
+    @Test
+    fun `accepts gaps in the seq`() {
+        station.receive("CMD 3 F")
+
+        assertEquals("RPT 7 0 2 N OK", station.receive("CMD 7 F"))
+    }
+
+    @Test
+    fun `a rejected command still consumes its seq`() {
+        station.receive("CMD 5 FFXL")
+
+        assertEquals("RPT 5 0 0 N REJECTED DUPLICATE", station.receive("CMD 5 F"))
+    }
+
+    @Test
+    fun `a duplicate is reported before an unknown command`() {
+        station.receive("CMD 5 F")
+
+        assertEquals("RPT 5 0 1 N REJECTED DUPLICATE", station.receive("CMD 5 FX"))
+    }
+
+    @Test
+    fun `a malformed line does not consume any seq`() {
+        station.receive("CMD 1 GARBAGE TOO")
+
+        assertEquals("RPT 1 0 1 N OK", station.receive("CMD 1 F"))
+    }
 }
