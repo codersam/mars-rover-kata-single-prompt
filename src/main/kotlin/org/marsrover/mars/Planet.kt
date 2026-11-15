@@ -7,7 +7,7 @@ import org.marsrover.protocol.Status
 
 data class Execution(val rover: Rover, val status: Status)
 
-class Planet(val width: Int, val height: Int, private val obstacles: Set<Position> = emptySet()) {
+class Planet(private val width: Int, private val height: Int, private val obstacles: Set<Position> = emptySet()) {
 
     fun execute(rover: Rover, commands: List<Command>): Execution =
         commands.fold(Execution(rover, Status.Ok)) { execution, command ->
